@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 320px;
+      padding: 15px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .server-info {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .server-info h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+      font-size: 14px;
+    }
+    .server-detail {
+      display: flex;
+      justify-content: space-between;
+      margin: 6px 0;
+      font-size: 11px;
+      align-items: center;
+    }
+    .server-detail label {
+      font-weight: bold;
+      color: #666;
+      flex: 0 0 80px;
+    }
+    .server-detail span {
+      color: #000;
+      font-family: monospace;
+      font-size: 10px;
+      word-break: break-all;
+      flex: 1;
+    }
+    .copy-btn {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .copy-btn:hover {
+      background: #45a049;
+    }
+    .no-server {
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      padding: 20px;
+    }
+    .instructions {
+      font-size: 10px;
+      color: #666;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+    .real-server {
+      background: #e8f5e8;
+      border: 1px solid #d4b4d4;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>🎮 Agar.io Server Info</h2>
+  </div>
+  
+  <div id="serverInfo"></div>
+  
+  <div class="instructions">
+    <strong>How to use:</strong><br>
+    1. Join any agar.io game<br>
+    2. Server info appears here<br>
+    3. Copy and paste to bot tool<br>
+    <br>
+    <strong>Real server URLs look like:</strong><br>
+    <code>web-arenas-live-v25-0.agario.miniclippt.com/eu-west-2/3-9-190-4</code>
+  </div>
+
+  <script>
+    function displayServerInfo() {
+      chrome.storage.local.get(['serverInfo', 'timestamp'], function(result) {
+        const container = document.getElementById('serverInfo');
+        
+        if (result.serverInfo && result.serverInfo.captured) {
+          const server = result.serverInfo;
+          const timeDiff = Date.now() - result.timestamp;
+          const minutesAgo = Math.floor(timeDiff / 60000);
+          
+          // Show real server indicator if we have full URL
+          const realServerHtml = server.fullUrl ? 
+            '<div class="real-server">🔥 REAL SERVER DETECTED!</div>' : '';
+          
+          container.innerHTML = `
+            ${realServerHtml}
+            <div class="server-info">
+              <h3>🔗 Current Server</h3>
+              ${server.fullUrl ? `
+                <div class="server-detail">
+                  <label>Full URL:</label>
+                  <span>${server.fullUrl}</span>
+                </div>
+              ` : ''}
+              ${server.domain ? `
+                <div class="server-detail">
+                  <label>Domain:</label>
+                  <span>${server.domain}</span>
+                </div>
+              ` : ''}
+              ${server.region ? `
+                <div class="server-detail">
+                  <label>Region:</label>
+                  <span>${server.region}</span>
+                </div>
+              ` : ''}
+              ${server.wsUrl ? `
+                <div class="server-detail">
+                  <label>WebSocket:</label>
+                  <span>${server.wsUrl}</span>
+                </div>
+              ` : ''}
+              <div class="server-detail">
+                <label>Updated:</label>
+                <span>${minutesAgo} min ago</span>
+              </div>
+              <button class="copy-btn" onclick="copyServerInfo()">
+                📋 Copy Server Info
+              </button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="no-server">
+              ❌ No server detected<br>
+              <small>Join an agar.io game first!</small>
+              <br><br>
+              <strong>Troubleshooting:</strong><br>
+              • Make sure you're in-game (not menu)<br>
+              • Try refreshing and joining again<br>
+              • Check if extension is enabled
+            </div>
+          `;
+        }
+      });
+    }
+    
+    function copyServerInfo() {
+      chrome.storage.local.get(['serverInfo'], function(result) {
+        if (result.serverInfo && result.serverInfo.captured) {
+          const server = result.serverInfo;
+          
+          // Prefer full URL, fallback to domain
+          let serverText = server.fullUrl || server.domain || server.wsUrl;
+          
+          // If we have the full WebSocket URL, use that
+          if (server.wsUrl) {
+            serverText = server.wsUrl;
+          }
+          
+          navigator.clipboard.writeText(serverText).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => {
+              btn.textContent = '📋 Copy Server Info';
+            }, 2000);
+          });
+        }
+      });
+    }
+    
+    // Load server info when popup opens
+    displayServerInfo();
+    
+    // Refresh every 3 seconds
+    setInterval(displayServerInfo, 3000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Agar.io Server Info",
+  "version": "1.0",
+  "description": "Shows current agar.io server IP and port for bot connections",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://agar.io/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Agar.io Server Info"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://agar.io/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
